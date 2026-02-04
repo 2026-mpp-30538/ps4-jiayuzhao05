@@ -1,0 +1,80 @@
+---
+title: "30538 Problem Set 4: Web Scraping"
+author: "Peter Ganong, Maggie Shi, Richard Chen"
+date: "2026-02-01"
+format: 
+    pdf 
+execute:
+  eval: false 
+  echo: false
+---
+
+**Due 02/07/2026 at 5:00PM Central**
+
+"This submission is my work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\*
+
+### Github Classroom Assignment Setup and Submission Instructions
+
+1.  **Accepting and Setting up the PS4 Assignment Repository**
+    -   Each student must individually accept the repository for the problem set from Github Classroom ("ps4") -- <https://classroom.github.com/a/hWhtcHqH>
+        -   You will be prompted to select your cnetid from the list in order to link your Github account to your cnetid.
+        -   If you can't find your cnetid in the link above, click "continue to next step" and accept the assignment, then add your name, cnetid, and Github account to this Google Sheet and we will manually link it: <https://rb.gy/9u7fb6>
+    -   If you authenticated and linked your Github account to your device, you should be able to clone your PS4 assignment repository locally.
+    -   Contents of PS4 assignment repository:
+        -   `ps4_template.qmd`: this is the Quarto file with the template for the problem set. You will write your answers to the problem set here.
+2.  **Submission Process**:
+    -   Knit your completed solution `ps4.qmd` as a pdf `ps4.pdf`.
+        -   Your submission does not need runnable code. Instead, you will tell us either what code you ran or what output you got.
+    -   To submit, push `ps4.qmd` and `ps4.pdf` to your PS4 assignment repository. Confirm on Github.com that your work was successfully pushed.
+
+### Grading
+- You will be graded on what was last pushed to your PS4 assignment repository before the assignment deadline
+- Problem sets will be graded for completion as: {missing (0%); ✓- (incomplete, 50%); ✓+ (excellent, 100%)}
+    - The percent values assigned to each problem denote how long we estimate the problem will take as a share of total time spent on the problem set, not the points they are associated with.
+- In order for your submission to be considered complete, you need to push both your `ps4.qmd` and `ps4.pdf` to your repository. Submissions that do not include both files will automatically receive 50% credit.
+
+
+\newpage
+
+## (40%) Step 1: Develop initial scraper and crawler
+**Scraping**: Go to the first page of the HHS OIG’s ["Enforcement Actions" page](https://oig.hhs.gov/fraud/enforcement/) and scrape and collect the following into a dataset:
+    * Title of the enforcement action
+    * Date
+    * Category (e.g, "Criminal and Civil Actions")
+    * Link associated with the enforcement action
+
+Collect your output into a tidy dataframe and print its `head`.
+
+
+*Hint*: if you go to James A. Robinson's profile page at the Nobel Prize website [here](https://www.nobelprize.org/prizes/economic-sciences/2024/robinson/facts/), right-click anywhere along the line "Affiliation at the time of the award: University of Chicago, Chicago, IL, USA", and select Inspect, you'll see that this affiliation information is located at the third `<p>` tag out of five `<p>` tags under the `<div class="content">`. Think about how you can select the third element of `<p>` out of five `<p>` elements so you're sure you scrape the affiliation information, not other. This way, you can scrape the name of agency to answer this question.
+
+## (40%) Step 2: Making the scraper dynamic
+1. **Turning the scraper into a function**: You will write a function that takes as input a month and a year, and then pulls and formats the enforcement actions like in Step 1 starting from that month+year to today.
+    
+    * It is *very important* to make sure that you include an indicator whether or not to actually run the function. If you do not include an indicator, then each time you try to knit the qmd file, the scraper will run, and it will take a very long time to compile your pdf. Instead, run the function once to create a file called enforcement_actions_year_month.csv, which you can use in subsequent parts of the pset. Then turn the indicator off so that knitting your qmd file goes smoothly.
+    * This function should first check that the year inputted >= 2013 before starting to scrape. If the year inputted < 2013, it should print a statement reminding the user to restrict to year >= 2013, since only enforcement actions after 2013 are listed.
+    * It should save the dataframe output into a .csv file named as "enforcement_actions_
+    *year*_*month*.csv" (do not commit this file to git)
+    * If you're crawling multiple pages, always add 1 second wait before going to the next page to prevent potential server-side block. To implement this in Python, you may look up `.sleep()` function from `time` library.
+
+  a. Before writing out your function, write down pseudo-code of the steps that your function will go through. If you use a loop, discuss what kind of loop you will use and how you will define it. *Hint: Note that a simple `for` loop may not be sufficient for what this crawler requires. Use online resources to look into different types of loops or different ways of using `for` loops to see if there is something that is more appropriate for this task.*
+  b. Now code up your dynamic scraper and run it to start collecting the enforcement actions since January 2024. How many enforcement actions do you get in your final dataframe? What is the date and details of the earliest enforcement action it scraped?
+  c. Now, let's go a little further back. Test your code by collecting the actions since January 2022. *Note that this can take a while.* How many enforcement actions do you get in your final dataframe? What is the date and details of the earliest enforcement action it scraped?  Use the dataframe from this process for every question after this.
+
+  *Hint*: 
+  
+    If you go to the next page in this HHS OIG's "Enforcement Actions" page, you'll notice a pattern:
+
+      * Second page URL: https://oig.hhs.gov/fraud/enforcement/?page=2
+      * Third page URL: https://oig.hhs.gov/fraud/enforcement/?page=3
+      * and so on ...
+
+## (20%) Step 3: Plot data based on scraped data
+
+*Note*: To complete this part of the pset, reference the csv file you created in step 2, enforcement_actions_year_month.csv.
+
+1. Plot a line chart with altair that shows: **the number of enforcement actions** over time (aggregated to each month+year) overall since January 2022,
+2. Plot a line chart with altair that shows: **the number of enforcement actions** split out by:
+
+    * "Criminal and Civil Actions" vs. "State Enforcement Agencies"
+    * Five topics in the "Criminal and Civil Actions" category: "Health Care Fraud", "Financial Fraud", "Drug Enforcement", "Bribery/Corruption", and "Other". *Hint: You will need to divide the five topics manually by looking at the title and assigning the relevant topic. For example, if you find the word "bank" or "financial" in the title of an action, then that action should probably belong to "Financial Fraud" topic. We suggest using AI to identify patterns in your scraped data and suggest ways of classifying based on the titles.*
