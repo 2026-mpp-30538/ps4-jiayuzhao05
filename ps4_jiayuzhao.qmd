@@ -54,29 +54,33 @@ print("Testing library imports...")
 
 try:
     import pandas as pd
-    print("✓ pandas imported successfully")
+
+    print("pandas imported successfully")
 except ImportError as e:
-    print(f"✗ pandas import failed: {e}")
+    print(f"pandas import failed: {e}")
 
 try:
-    import altair as alt  
-    print("✓ altair imported successfully")
+    import altair as alt
+
+    print("altair imported successfully")
 except ImportError as e:
-    print(f"✗ altair import failed: {e}")
+    print(f"altair import failed: {e}")
 
 try:
     import time
-    print("✓ time imported successfully")
+
+    print("time imported successfully")
 except ImportError as e:
-    print(f"✗ time import failed: {e}")
+    print(f"time import failed: {e}")
 
 try:
-    import warnings 
-    warnings.filterwarnings('ignore')
+    import warnings
+
+    warnings.filterwarnings("ignore")
     alt.renderers.enable("png")
-    print("✓ Configuration successful")
+    print("Configuration successful")
 except Exception as e:
-    print(f"✗ Configuration failed: {e}")
+    print(f"Configuration failed: {e}")
 
 print("\nAll imports complete!")
 ```
@@ -171,26 +175,26 @@ print(df.head())
 
 ## Step 2: Making the scraper dynamic
 
-### 1. Turning the scraper into a function 
+1. Turning the scraper into a function 
 
-**a. Pseudo-Code**
+a. Pseudo-Code
 
-**Function:** `scrape_enforcement_actions(month, year, run=False)`
+Function: `scrape_enforcement_actions(month, year, run=False)`
 
-**Steps:**
+Steps:
 
-1. **Input validation:**
+1. Input validation:
    - Check if year >= 2013 (data only available from 2013 onwards)
    - If year < 2013, print warning and return None
    - If run=False, print message and return None without scraping
 
-2. **Initialize variables:**
+2. Initialize variables:
    - Create empty list for enforcement actions
    - Set base URL and headers
    - Calculate target start date from month/year
 
-3. **Loop through pages (while loop):**
-   - **Why while loop?** We don't know how many pages exist beforehand. We need to keep scraping until we reach the target date or run out of pages. A while loop allows us to check conditions on each iteration and stop dynamically.
+3. Loop through pages (while loop):
+   - Why while loop? We don't know how many pages exist beforehand. We need to keep scraping until we reach the target date or run out of pages. A while loop allows us to check conditions on each iteration and stop dynamically.
    - Start with page number 0
    - For each page:
      - Construct URL (add ?page=N for pages after first)
@@ -206,62 +210,62 @@ print(df.head())
      - If no more pages or reached target date, exit loop
      - Otherwise, increment page number
 
-4. **Process and save results:**
+4. Process and save results:
    - Convert list to DataFrame
    - Save to CSV: "enforcement_actions_{year}_{month}.csv"
    - Print summary statistics
    - Return DataFrame
 
-**b. Create Dynamic Scraper**
+b. Create Dynamic Scraper
 
 ```{python}
 def scrape_enforcement_actions(month, year, run=False):
     """
     Scrape HHS OIG enforcement actions from a given month/year to today.
-    
+
     Parameters:
-    -----------
     month : int (1-12)
     year : int (must be >= 2013)
     run : bool (default: False)
-    
+
     Returns:
-    --------
     pandas.DataFrame or None
     """
-    
+
     # Check if function should run
     if not run:
         print("Function not executed. Set run=True to scrape data.")
         return None
-    
+
     # Validate year
     if year < 2013:
         print(f"Error: Year must be >= 2013. You entered: {year}")
         return None
-    
+
     # Validate month
     if month < 1 or month > 12:
         print(f"Error: Month must be between 1 and 12. You entered: {month}")
         return None
-    
+
     print(f"Starting to scrape from {month}/{year} to today...")
-    
+
     # Initialize
     target_date = datetime(year, month, 1)
     all_actions = []
     base_url = "https://oig.hhs.gov/fraud/enforcement/"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    }
+
     page_num = 0
     should_continue = True
-    
+
     # While loop for pagination
     while should_continue:
         # Construct URL
         url = base_url if page_num == 0 else f"{base_url}?page={page_num}"
         print(f"Scraping page {page_num + 1}...")
-        
+
         # Make request
         try:
             response = requests.get(url, headers=headers)
@@ -269,43 +273,46 @@ def scrape_enforcement_actions(month, year, run=False):
         except:
             print(f"Error fetching page {page_num + 1}")
             break
-        
+
         # Parse HTML
-        soup = BeautifulSoup(response.content, 'html.parser')
-        h2_tags = soup.find_all('h2')
+        soup = BeautifulSoup(response.content, "html.parser")
+        h2_tags = soup.find_all("h2")
         items = [h2.parent for h2 in h2_tags if h2.parent]
-        
+
         if not items:
             print("No more items found.")
             break
-        
+
         print(f"  Found {len(items)} items")
-        
+
         # Extract data
         for item in items:
             # Title and link
-            heading = item.find(['h2', 'h3'])
+            heading = item.find(["h2", "h3"])
             if not heading:
                 continue
-                
-            link_element = heading.find('a')
+
+            link_element = heading.find("a")
             if link_element:
                 title = link_element.get_text(strip=True)
-                link = link_element.get('href')
-                if link and not link.startswith('http'):
-                    link = 'https://oig.hhs.gov' + link
+                link = link_element.get("href")
+                if link and not link.startswith("http"):
+                    link = "https://oig.hhs.gov" + link
             else:
                 continue
-            
+
             # Date
-            date_element = item.find('time')
+            date_element = item.find("time")
             if date_element:
                 date_str = date_element.get_text(strip=True)
             else:
                 text = item.get_text()
-                match = re.search(r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', text)
+                match = re.search(
+                    r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}",
+                    text,
+                )
                 date_str = match.group(0) if match else None
-            
+
             # Parse date for comparison
             if date_str:
                 try:
@@ -314,43 +321,45 @@ def scrape_enforcement_actions(month, year, run=False):
                     article_date = datetime.now()
             else:
                 article_date = datetime.now()
-            
+
             # Check date range
             if article_date >= target_date:
                 # Categories
                 categories = []
-                for cat in item.find_all('li'):
+                for cat in item.find_all("li"):
                     cat_text = cat.get_text(strip=True)
                     if cat_text:
                         categories.append(cat_text)
-                category = ', '.join(categories) if categories else None
-                
-                all_actions.append({
-                    'title': title,
-                    'date': date_str,
-                    'category': category,
-                    'link': link
-                })
+                category = ", ".join(categories) if categories else None
+
+                all_actions.append(
+                    {
+                        "title": title,
+                        "date": date_str,
+                        "category": category,
+                        "link": link,
+                    }
+                )
             else:
                 print(f"  Reached target date. Stopping.")
                 should_continue = False
                 break
-        
+
         # Check for next page (simplified: stop after 100 pages max)
         page_num += 1
         if page_num >= 100:
             should_continue = False
-        
+
         # Delay between requests
         if should_continue:
             time.sleep(1)
-    
+
     # Create DataFrame and save
     if all_actions:
         df = pd.DataFrame(all_actions)
         filename = f"enforcement_actions_{year}_{month}.csv"
         df.to_csv(filename, index=False)
-        
+
         print(f"\nTotal actions collected: {len(df)}")
         print(f"Saved to: {filename}")
         return df
@@ -362,9 +371,8 @@ def scrape_enforcement_actions(month, year, run=False):
 **c. Test Your Code**
 
 ```{python}
-# IMPORTANT: Set run=False to skip scraping during rendering
+# Set run=False to skip scraping during rendering
 # Only set run=True when you actually want to scrape data
-# This prevents slow rendering and repeated scraping
 
 # Test: Scrape from January 2022 to today
 print("Starting scraping test...")
