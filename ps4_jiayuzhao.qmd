@@ -495,10 +495,7 @@ if df is None:
 ### 1. Plot the number of enforcement actions over time
 
 ```{python}
-#| label: fig-enforcement-timeline
-#| fig-cap: "Number of enforcement actions over time"
-#| fig-width: 10
-#| fig-height: 5
+#| output: false
 
 # Aggregate by month-year
 monthly_counts = df.groupby('month_year').size().reset_index(name='count')
@@ -507,7 +504,7 @@ monthly_counts['month_year_str'] = monthly_counts['month_year'].astype(str)
 print(f"Aggregated data by month: {len(monthly_counts)} months")
 print(f"Date range: {monthly_counts['month_year_str'].min()} to {monthly_counts['month_year_str'].max()}")
 
-# Create line chart with matplotlib
+# Create and save line chart
 plt.figure(figsize=(10, 5))
 plt.plot(monthly_counts['month_year_str'], monthly_counts['count'], marker='o', linewidth=2, color='#1f77b4')
 plt.xlabel('Month-Year', fontsize=12)
@@ -516,18 +513,19 @@ plt.title('Enforcement Actions Over Time (Oct 2023 - Present)', fontsize=14, fon
 plt.xticks(rotation=45, ha='right')
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.gcf()  # Get current figure to display it
+plt.savefig('fig1_timeline.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Figure 1 saved to fig1_timeline.png")
 ```
+
+![Enforcement Actions Over Time](fig1_timeline.png)
 
 ### 2. Plot the number of enforcement actions categorized:
 
 * based on "Criminal and Civil Actions" vs. "State Enforcement Agencies"
 
 ```{python}
-#| label: fig-category-comparison
-#| fig-cap: "Criminal and Civil Actions vs. State Enforcement Agencies"
-#| fig-width: 10
-#| fig-height: 5
+#| output: false
 
 # Classify by main category
 df['main_category'] = df['category'].apply(
@@ -542,7 +540,7 @@ print(df['main_category'].value_counts())
 monthly_category = df.groupby(['month_year', 'main_category']).size().reset_index(name='count')
 monthly_category['month_year_str'] = monthly_category['month_year'].astype(str)
 
-# Create line chart with matplotlib
+# Create and save line chart
 plt.figure(figsize=(10, 5))
 for category in monthly_category['main_category'].unique():
     data = monthly_category[monthly_category['main_category'] == category]
@@ -555,16 +553,17 @@ plt.xticks(rotation=45, ha='right')
 plt.legend(fontsize=10)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.gcf()  # Get current figure to display it
+plt.savefig('fig2_category.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Figure 2 saved to fig2_category.png")
 ```
+
+![Criminal and Civil vs. State Enforcement Agencies](fig2_category.png)
 
 * based on five topics
 
 ```{python}
-#| label: fig-topic-analysis
-#| fig-cap: "Criminal and Civil Actions by Topic"
-#| fig-width: 11
-#| fig-height: 6
+#| output: false
 
 # Classify into 5 topics based on title keywords
 def classify_topic(title):
@@ -602,7 +601,7 @@ print(criminal_civil['topic'].value_counts())
 monthly_topic = criminal_civil.groupby(['month_year', 'topic']).size().reset_index(name='count')
 monthly_topic['month_year_str'] = monthly_topic['month_year'].astype(str)
 
-# Create line chart with matplotlib
+# Create and save line chart
 plt.figure(figsize=(11, 6))
 for topic in monthly_topic['topic'].unique():
     data = monthly_topic[monthly_topic['topic'] == topic]
@@ -615,5 +614,9 @@ plt.xticks(rotation=45, ha='right')
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.gcf()  # Get current figure to display it
+plt.savefig('fig3_topics.png', dpi=150, bbox_inches='tight')
+plt.close()
+print("Figure 3 saved to fig3_topics.png")
 ```
+
+![Criminal and Civil Actions by Topic](fig3_topics.png)
