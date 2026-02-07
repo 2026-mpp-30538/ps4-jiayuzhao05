@@ -1,0 +1,30 @@
+---
+title: "Test Plot"
+format: 
+  pdf:
+    fig-format: png
+    fig-dpi: 150
+execute:
+  echo: true
+---
+
+## Test Matplotlib Plot
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Simple test plot
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+plt.figure(figsize=(8, 4))
+plt.plot(x, y)
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Test Plot')
+plt.grid(True)
+plt.show()
+```
+
+This should show a simple sine wave plot.

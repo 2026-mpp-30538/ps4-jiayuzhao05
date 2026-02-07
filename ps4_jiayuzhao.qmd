@@ -1,9 +1,11 @@
 ---
-title: "title"
+title: "PS4"
 author: "jiayu zhao"
 date: "date"
 format: 
   pdf:
+    fig-format: png
+    fig-dpi: 150
     include-in-header: 
        text: |
          \usepackage{fvextra}
@@ -16,9 +18,10 @@ include-before-body:
       breaksymbolleft={},
       breaklines
     }
-output:
-  echo: false
-  eval: false
+execute:
+  echo: true
+  eval: true
+  warning: false
 ---
 
 **Due 02/07 at 5:00PM Central.**
@@ -451,16 +454,15 @@ print(f"Created sample CSV with {len(sample_df)} records for testing")
 # Load data and visualization library
 print("Step 3: Preparing data for visualization\n")
 
-# Try to import altair
-try:
-    import altair as alt
-    print("Altair imported successfully")
-    HAS_ALTAIR = True
-except ImportError as e:
-    print(f"Altair not available: {e}")
-    print(" Will use matplotlib as fallback")
-    import matplotlib.pyplot as plt
-    HAS_ALTAIR = False
+# Use matplotlib for PDF output (better compatibility)
+import matplotlib
+# Set backend before importing pyplot
+matplotlib.rcParams['figure.dpi'] = 150
+matplotlib.rcParams['savefig.dpi'] = 150
+import matplotlib.pyplot as plt
+HAS_ALTAIR = False
+print("Using matplotlib for PDF-compatible visualizations")
+print(f"Matplotlib backend: {matplotlib.get_backend()}")
 
 # Read from CSV file created in Step 2
 try:
@@ -493,15 +495,10 @@ if df is None:
 ### 1. Plot the number of enforcement actions over time
 
 ```{python}
-# Import altair for this code block
-try:
-    import altair as alt
-except ImportError:
-    import matplotlib.pyplot as plt
-    print("Using matplotlib instead of altair")
-    HAS_ALTAIR = False
-else:
-    HAS_ALTAIR = True
+#| label: fig-enforcement-timeline
+#| fig-cap: "Number of enforcement actions over time"
+#| fig-width: 10
+#| fig-height: 5
 
 # Aggregate by month-year
 monthly_counts = df.groupby('month_year').size().reset_index(name='count')
@@ -510,32 +507,16 @@ monthly_counts['month_year_str'] = monthly_counts['month_year'].astype(str)
 print(f"Aggregated data by month: {len(monthly_counts)} months")
 print(f"Date range: {monthly_counts['month_year_str'].min()} to {monthly_counts['month_year_str'].max()}")
 
-# Create line chart
-if HAS_ALTAIR:
-    chart1 = alt.Chart(monthly_counts).mark_line(point=True).encode(
-        x=alt.X('month_year_str:T', 
-                title='Month-Year',
-                axis=alt.Axis(labelAngle=-45)),
-        y=alt.Y('count:Q', 
-                title='Number of Enforcement Actions'),
-        tooltip=['month_year_str:T', 'count:Q']
-    ).properties(
-        title='Enforcement Actions Over Time (Sept 2023 - Present)',
-        width=700,
-        height=400
-    )
-    chart1
-else:
-    # Fallback to matplotlib
-    plt.figure(figsize=(12, 6))
-    plt.plot(monthly_counts['month_year_str'], monthly_counts['count'], marker='o')
-    plt.xlabel('Month-Year')
-    plt.ylabel('Number of Enforcement Actions')
-    plt.title('Enforcement Actions Over Time (Sept 2023 - Present)')
-    plt.xticks(rotation=45, ha='right')
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
+# Create line chart with matplotlib
+plt.figure(figsize=(10, 5))
+plt.plot(monthly_counts['month_year_str'], monthly_counts['count'], marker='o', linewidth=2, color='#1f77b4')
+plt.xlabel('Month-Year', fontsize=12)
+plt.ylabel('Number of Enforcement Actions', fontsize=12)
+plt.title('Enforcement Actions Over Time (Oct 2023 - Present)', fontsize=14, fontweight='bold')
+plt.xticks(rotation=45, ha='right')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.gcf()  # Get current figure to display it
 ```
 
 ### 2. Plot the number of enforcement actions categorized:
@@ -543,14 +524,10 @@ else:
 * based on "Criminal and Civil Actions" vs. "State Enforcement Agencies"
 
 ```{python}
-# Try to import altair, fall back to matplotlib
-try:
-    import altair as alt
-    USE_ALTAIR = True
-except ImportError:
-    import matplotlib.pyplot as plt
-    USE_ALTAIR = False
-    print("Note: Using matplotlib instead of altair for visualization")
+#| label: fig-category-comparison
+#| fig-cap: "Criminal and Civil Actions vs. State Enforcement Agencies"
+#| fig-width: 10
+#| fig-height: 5
 
 # Classify by main category
 df['main_category'] = df['category'].apply(
@@ -565,47 +542,29 @@ print(df['main_category'].value_counts())
 monthly_category = df.groupby(['month_year', 'main_category']).size().reset_index(name='count')
 monthly_category['month_year_str'] = monthly_category['month_year'].astype(str)
 
-# Create line chart
-if USE_ALTAIR:
-    chart2a = alt.Chart(monthly_category).mark_line(point=True).encode(
-        x=alt.X('month_year_str:T', title='Month-Year', axis=alt.Axis(labelAngle=-45)),
-        y=alt.Y('count:Q', title='Number of Actions'),
-        color=alt.Color('main_category:N', title='Category'),
-        tooltip=['month_year_str:T', 'main_category:N', 'count:Q']
-    ).properties(
-        title='Criminal and Civil vs. State Enforcement Agencies',
-        width=700,
-        height=400
-    )
-    chart2a
-else:
-    # Matplotlib version
-    plt.figure(figsize=(12, 6))
-    for category in monthly_category['main_category'].unique():
-        data = monthly_category[monthly_category['main_category'] == category]
-        plt.plot(data['month_year_str'], data['count'], marker='o', label=category)
-    
-    plt.xlabel('Month-Year')
-    plt.ylabel('Number of Actions')
-    plt.title('Criminal and Civil vs. State Enforcement Agencies')
-    plt.xticks(rotation=45, ha='right')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
+# Create line chart with matplotlib
+plt.figure(figsize=(10, 5))
+for category in monthly_category['main_category'].unique():
+    data = monthly_category[monthly_category['main_category'] == category]
+    plt.plot(data['month_year_str'], data['count'], marker='o', label=category, linewidth=2)
+
+plt.xlabel('Month-Year', fontsize=12)
+plt.ylabel('Number of Actions', fontsize=12)
+plt.title('Criminal and Civil vs. State Enforcement Agencies', fontsize=14, fontweight='bold')
+plt.xticks(rotation=45, ha='right')
+plt.legend(fontsize=10)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.gcf()  # Get current figure to display it
 ```
 
 * based on five topics
 
 ```{python}
-# Try to import altair, fall back to matplotlib
-try:
-    import altair as alt
-    USE_ALTAIR = True
-except ImportError:
-    import matplotlib.pyplot as plt
-    USE_ALTAIR = False
-    print("Note: Using matplotlib instead of altair for visualization")
+#| label: fig-topic-analysis
+#| fig-cap: "Criminal and Civil Actions by Topic"
+#| fig-width: 11
+#| fig-height: 6
 
 # Classify into 5 topics based on title keywords
 def classify_topic(title):
@@ -643,32 +602,18 @@ print(criminal_civil['topic'].value_counts())
 monthly_topic = criminal_civil.groupby(['month_year', 'topic']).size().reset_index(name='count')
 monthly_topic['month_year_str'] = monthly_topic['month_year'].astype(str)
 
-# Create line chart
-if USE_ALTAIR:
-    chart2b = alt.Chart(monthly_topic).mark_line(point=True).encode(
-        x=alt.X('month_year_str:T', title='Month-Year', axis=alt.Axis(labelAngle=-45)),
-        y=alt.Y('count:Q', title='Number of Actions'),
-        color=alt.Color('topic:N', title='Topic'),
-        tooltip=['month_year_str:T', 'topic:N', 'count:Q']
-    ).properties(
-        title='Criminal and Civil Actions by Topic',
-        width=700,
-        height=400
-    )
-    chart2b
-else:
-    # Matplotlib version
-    plt.figure(figsize=(12, 6))
-    for topic in monthly_topic['topic'].unique():
-        data = monthly_topic[monthly_topic['topic'] == topic]
-        plt.plot(data['month_year_str'], data['count'], marker='o', label=topic)
-    
-    plt.xlabel('Month-Year')
-    plt.ylabel('Number of Actions')
-    plt.title('Criminal and Civil Actions by Topic')
-    plt.xticks(rotation=45, ha='right')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
+# Create line chart with matplotlib
+plt.figure(figsize=(11, 6))
+for topic in monthly_topic['topic'].unique():
+    data = monthly_topic[monthly_topic['topic'] == topic]
+    plt.plot(data['month_year_str'], data['count'], marker='o', label=topic, linewidth=2)
+
+plt.xlabel('Month-Year', fontsize=12)
+plt.ylabel('Number of Actions', fontsize=12)
+plt.title('Criminal and Civil Actions by Topic', fontsize=14, fontweight='bold')
+plt.xticks(rotation=45, ha='right')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.gcf()  # Get current figure to display it
 ```

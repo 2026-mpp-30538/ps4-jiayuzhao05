@@ -1,0 +1,43 @@
+---
+title: "Minimal Test"
+format: 
+  pdf:
+    fig-format: png
+    fig-dpi: 150
+execute:
+  echo: true
+---
+
+## Load Data
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load data
+df = pd.read_csv('enforcement_actions_2022_1.csv')
+df['date_parsed'] = pd.to_datetime(df['date'], format='%B %d, %Y', errors='coerce')
+df['month_year'] = df['date_parsed'].dt.to_period('M')
+print(f"Loaded {len(df)} records")
+```
+
+## Plot
+
+```{python}
+#| label: fig-timeline
+#| fig-cap: "Timeline"
+
+# Aggregate
+monthly = df.groupby('month_year').size().reset_index(name='count')
+monthly['month_year_str'] = monthly['month_year'].astype(str)
+
+# Plot
+plt.figure(figsize=(10, 5))
+plt.plot(monthly['month_year_str'], monthly['count'], marker='o')
+plt.xlabel('Month-Year')
+plt.ylabel('Count')
+plt.title('Enforcement Actions')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.gcf()
+```
